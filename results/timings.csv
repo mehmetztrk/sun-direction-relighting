@@ -1,0 +1,26 @@
+time;tool;image;trial;seconds;sun_rotation;sun_elevation;prompt
+2026-11-06T12:32:26;qwen_3d;03_concrete_block;right;17.0;90.0;30.0;
+2026-11-06T12:33:05;sun_direction;03_concrete_block;right;26.0;90.0;30.0;
+2026-11-06T12:33:37;kontext;03_concrete_block;right;31.5;90;30;Change only the lighting: the sun is now on the right side of the image, so shadows fall toward the left. Keep the building geometry, windows, materials, camera angle and composition exactly the same.
+2026-11-06T12:55:49;sun_direction;01_villa;left;25.1;-90.0;30.0;
+2026-11-06T12:56:10;sun_direction;02_living_room;back_left;20.5;-135.0;25.0;
+2026-11-06T12:56:35;qwen_3d;01_villa;left;14.0;270.0;30.0;
+2026-11-06T12:56:42;qwen_3d;02_living_room;back_left;6.5;225.0;25.0;
+2026-11-06T12:57:20;kontext;01_villa;left;37.5;90;30;Change only the lighting: the sun is now on the left side of the image, so shadows fall toward the right. Keep the building geometry, windows, materials, camera angle and composition exactly the same.
+2026-11-06T12:58:06;kontext;02_living_room;back_left;45.1;90;30;Change only the lighting: low warm evening sun now enters through the two windows from the back left, casting long sun patches across the floor toward the right. Keep the room layout, furniture, materials, camera angle and composition exactly the same.
+2026-11-06T13:00:09;qwen_3d;01_villa;left_space_size;16.1;270.0;30.0;
+2026-11-06T14:06:49;sun_4b_local;03_concrete_block;right;108.1;90;30;
+2026-11-06T14:09:16;sun_4b_local;01_villa;left;115.6;-90;30;
+2026-11-06T14:11:10;sun_4b_local;02_living_room;back_left;114.1;-135;25;
+2026-11-06T14:12:54;sun_4b_local;03_concrete_block;right_color;103.4;90;30;clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:14:15;sun_4b_local;01_villa;left_color;81.1;-90;30;clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:15:44;sun_4b_local;02_living_room;back_left_color;88.9;-135;25;warm natural sunlight, same furniture colors and materials as the original
+2026-11-06T14:41:05;sun_4b_local;01_villa;sun_front;86.6;0;35;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:42:22;sun_4b_local;01_villa;sun_back;76.6;180;25;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:43:37;sun_4b_local;01_villa;sun_left;75.1;-90;25;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:44:51;sun_4b_local;01_villa;sun_right;73.2;90;25;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:46:04;sun_4b_local;01_villa;sun_top;73.5;0;85;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:47:18;sun_4b_local;01_villa;sunset_left;73.4;-90;8;low orange sunset light, long dark shadows, same materials as the original
+2026-11-06T14:50:38;sun_4b_local;01_villa;sun_left_low;83.6;-100;12;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:51:54;sun_4b_local;01_villa;sun_right_low;75.1;100;12;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:53:07;sun_4b_local;01_villa;sunset_right;73.5;90;8;low orange sunset light, long dark shadows, same materials as the original
