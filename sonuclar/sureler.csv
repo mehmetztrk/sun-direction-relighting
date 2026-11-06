@@ -1,0 +1,17 @@
+﻿zaman;arac;gorsel;deneme;toplam_sn;gun;yukseklik;prompt
+2026-11-06T12:32:26;qwen_3d;03_dis_cephe_beton_bina;sag;17.0;90.0;30.0;
+2026-11-06T12:33:05;sun_direction;03_dis_cephe_beton_bina;sag;26.0;90.0;30.0;
+2026-11-06T12:33:37;kontext;03_dis_cephe_beton_bina;sag;31.5;90;30;Change only the lighting: the sun is now on the right side of the image, so shadows fall toward the left. Keep the building geometry, windows, materials, camera angle and composition exactly the same.
+2026-11-06T12:55:49;sun_direction;01_dis_cephe_villa;sol;25.1;-90.0;30.0;
+2026-11-06T12:56:10;sun_direction;02_ic_mekan_oturma_odasi;arka_sol;20.5;-135.0;25.0;
+2026-11-06T12:56:35;qwen_3d;01_dis_cephe_villa;sol;14.0;270.0;30.0;
+2026-11-06T12:56:42;qwen_3d;02_ic_mekan_oturma_odasi;arka_sol;6.5;225.0;25.0;
+2026-11-06T12:57:20;kontext;01_dis_cephe_villa;sol;37.5;90;30;Change only the lighting: the sun is now on the left side of the image, so shadows fall toward the right. Keep the building geometry, windows, materials, camera angle and composition exactly the same.
+2026-11-06T12:58:06;kontext;02_ic_mekan_oturma_odasi;arka_sol;45.1;90;30;Change only the lighting: low warm evening sun now enters through the two windows from the back left, casting long sun patches across the floor toward the right. Keep the room layout, furniture, materials, camera angle and composition exactly the same.
+2026-11-06T13:00:09;qwen_3d;01_dis_cephe_villa;sol_space_boyutu;16.1;270.0;30.0;
+2026-11-06T14:06:49;yerel_4b;03_dis_cephe_beton_bina;sag;108.1;90;30;
+2026-11-06T14:09:16;yerel_4b;01_dis_cephe_villa;sol;115.6;-90;30;
+2026-11-06T14:11:10;yerel_4b;02_ic_mekan_oturma_odasi;arka_sol;114.1;-135;25;
+2026-11-06T14:12:54;yerel_4b;03_dis_cephe_beton_bina;sag_renk;103.4;90;30;clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:14:15;yerel_4b;01_dis_cephe_villa;sol_renk;81.1;-90;30;clear blue sky, warm natural sunlight, same colors and materials as the original
+2026-11-06T14:15:44;yerel_4b;02_ic_mekan_oturma_odasi;arka_sol_renk;88.9;-135;25;warm natural sunlight, same furniture colors and materials as the original

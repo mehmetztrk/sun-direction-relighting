@@ -1,0 +1,12 @@
+numpy
+pillow
+gradio_client
+huggingface_hub
+reportlab
+accelerate
+peft
+safetensors
+sentencepiece
+transformers
+torch
+git+https://github.com/huggingface/diffusers.git
