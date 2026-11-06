@@ -112,16 +112,6 @@ def start():
     return [
         text("Moving the sun in architecture photos", TITLE),
         text(f'Mehmet Ozturk &nbsp;|&nbsp; <a href="{REPO}" color="#1a5fb4">{REPO.replace("https://", "")}</a>', SUB),
-        text("What this project is about", H1),
-        text("Architects often want to see the same building at a different time of day, or with the sun on another "
-             "side. Taking a new photo or setting up a new render takes time, so it would be great to change the sun "
-             "with AI in a few seconds."),
-        text("The hard part is that the sun changes a lot of things at once. Shadows have to move, some walls get "
-             "brighter, others get darker, and reflections change. But the building itself must not change at all. "
-             "Windows, materials and furniture have to stay the same. AI models like to redraw things, and that is "
-             "exactly what an architect doesn't want."),
-        text("So my goal was simple: find out which tools can do this, try them on real photos, show what works "
-             "and what breaks, and say what I would use in a real product."),
         text("What I did", H1),
         *bullets([
             "I looked at what's out there: open models, LoRAs, paid APIs and apps.",
