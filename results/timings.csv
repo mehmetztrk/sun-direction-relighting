@@ -24,3 +24,4 @@ time;tool;image;trial;seconds;sun_rotation;sun_elevation;prompt
 2026-11-06T14:50:38;sun_4b_local;01_villa;sun_left_low;83.6;-100;12;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
 2026-11-06T14:51:54;sun_4b_local;01_villa;sun_right_low;75.1;100;12;strong direct sunlight, hard sharp shadows, clear blue sky, warm natural sunlight, same colors and materials as the original
 2026-11-06T14:53:07;sun_4b_local;01_villa;sunset_right;73.5;90;8;low orange sunset light, long dark shadows, same materials as the original
+2026-11-06T16:15:00;qwen_3d;01_villa;sun_front;24.3;0.0;35.0;
