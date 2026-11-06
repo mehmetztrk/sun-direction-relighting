@@ -190,7 +190,7 @@ def nesne_sayfasi():
 def ilk_sayfa():
     return [
         p("Changing sun direction without breaking the building", BASLIK),
-        p("Task report for MyArchitectAI. Tests run on 6 November 2026.", ALT),
+        p("Mehmet Ozturk. Task report for MyArchitectAI. Tests run on 6 November 2026.", ALT),
         p("Bottom line", H1),
         p("No tool I tested moves the sun cleanly and also keeps the scene intact. The closest is the "
           "Sun-Direction LoRA on exteriors. I would pilot its Apache-2.0 4B version on exteriors only, behind "
@@ -334,7 +334,7 @@ def main():
     govde += nesne_sayfasi() + sorun_sayfasi()
     belge = SimpleDocTemplate(CIKTI, pagesize=A4, leftMargin=15 * mm, rightMargin=15 * mm, topMargin=11 * mm,
                               bottomMargin=12 * mm, title="Changing sun direction without breaking the building",
-                              author="", subject="MyArchitectAI task report")
+                              author="Mehmet Ozturk", subject="MyArchitectAI task report")
     belge.build(govde, onFirstPage=sayfa_no, onLaterPages=sayfa_no)
     print(CIKTI)
 
