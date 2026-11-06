@@ -2,6 +2,7 @@
 
     python build_pdf.py
 """
+import csv
 import io
 import json
 from pathlib import Path
@@ -13,7 +14,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Image, PageBreak, Paragraph, SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import Image, KeepTogether, PageBreak, Paragraph, SimpleDocTemplate, Table, TableStyle
 
 import compare
 
@@ -154,11 +155,20 @@ def start():
         text("The Sun-Direction 4B model on a serverless GPU, for exteriors only, with an automatic check that retries "
              "if the building changes. My estimate is about $0.01 to $0.02 per image and 20 to 26 s. That estimate uses "
              "RunPod prices and my Space times. I did not test it on that GPU."),
+        text("How I measured", H1),
+        text("Every number here comes from my compare.py script. It helps me sort results, but it doesn't replace looking at them."),
+        *bullets([
+            "<b>Structure (0 to 1):</b> local correlation of brightness in a 15 x 15 pixel window, after undoing zoom and shift. "
+            "Flat areas like sky are skipped. New shadows lower it too: fake hard shadows scored 0.92 to 0.96, so a low score isn't always damage.",
+            "<b>Light change (EV):</b> how much the brightness pattern changed across the image, with the overall exposure change removed.",
+            "<b>Scale:</b> the zoom needed to line the result up with the original. 1.00 means the framing held.",
+            "<b>What it can't do:</b> it doesn't check if a shadow points the right way. That part was by eye.",
+        ]),
         text("The three test photos", H1),
         grid([(original(VILLA), "Villa", "Glass, a pool and a steel sculpture. Lots of ways to go wrong."),
               (original(BLOCK), "Concrete block", "A strong diagonal shadow, so you can see if the sun really moved."),
               (original(ROOM), "Living room", "Light can only come through the windows, and there is a lot of furniture.")],
-             max_height=60 * mm),
+             max_height=52 * mm),
     ]
 
 
@@ -168,11 +178,12 @@ def pairs(number, name, did, rows):
     items = []
     for tool, photo, trial, title, note in rows:
         items += [(original(photo), f"{labels[photo]}, original", ""), (r(tool, photo, trial), title, note)]
-    return [PageBreak(), text(f"{number}. {name}", H1), text(f"<b>What I did:</b> {did}"), grid(items, max_height=57 * mm)]
+    return [PageBreak(), text(f"{number}. {name}", H1), text(f"<b>What I did:</b> {did}"), grid(items, max_height=43 * mm)]
 
 
-def ending_of(result, problems):
-    return [text("Result", H2), text(result), text("Problems", H2), *bullets(problems)]
+def ending_of(setup, result, problems):
+    return [KeepTogether([text("Setup", H2), text(setup), text("Result", H2), text(result)]),
+            text("Problems and why they happen", H2), *bullets(problems)]
 
 
 def models():
@@ -183,9 +194,18 @@ def models():
                   [(s9, VILLA, "left", "Sun moved to the left", "The sun moved, but the colors and the pool went gray."),
                    (s9, BLOCK, "right", "Sun moved to the right", "The sun moved, but beige concrete turned gray and the sky went pale."),
                    (s9, ROOM, "back_left", "Low sun from the back left", "The sofa, table, rug and the view outside all changed.")])
-    story += ending_of("It moves the sun, but it washes out the colors.",
-                       ["Colors go gray.", "It redraws furniture indoors. It wasn't trained on interiors.",
-                        "The 9B model can't be used commercially."])
+    story += ending_of(
+        "FLUX.2 Klein 9B with the Sun-Direction LoRA, on a free ZeroGPU Space. It runs two passes at about 1 megapixel: "
+        "an overcast pass without the LoRA, then a LoRA pass that gets the overcast image and the ball as references. "
+        "4 steps, guidance 1.0, seed 42.",
+        "On both exteriors the lit side of the building really changed. Light change was 0.37 to 0.49 EV and the framing "
+        "held (scale 0.97 to 1.00). Structure was only 0.33 to 0.52, because the image is generated again rather than edited. "
+        "Output is about 1264 wide, so detail from the 1536 px input is lost too.",
+        ["<b>Color loss:</b> concrete and the pool went gray. On the 4B version I saved the overcast image and the color "
+         "was still there, so the loss happens in the LoRA pass, not the overcast pass.",
+         "<b>Interiors:</b> the author says the LoRA has no interior training data. It doesn't know light has to come "
+         "through the windows, and it redrew the view, sofa, table and rug.",
+         "<b>License:</b> the LoRA is Apache-2.0, but the 9B base model is non-commercial, so this version can't ship."])
 
     rows = [(VILLA, "left", "left_color", "Villa", "A lot of clouds appeared and everything is pale.",
              "The blue sky came back. The sculpture looks like stone."),
@@ -201,24 +221,48 @@ def models():
               text("<b>What I did:</b> 4B is the smaller version, and it's the one that allows commercial use. "
                    "I ran it on my own RTX 4070, once with no prompt and once with a short prompt asking it to keep the colors."),
               grid(items, columns=3, max_height=42 * mm)]
-    story += ending_of("The color prompt helped a lot. This is the version I would use, but only for exteriors.",
-                       ["Materials still change a bit, and it adds things like trees and clouds.",
-                        "It took 73 to 116 s on my card, because the model doesn't fully fit in 12 GB."])
+    story += ending_of(
+        "FLUX.2 Klein 4B (Apache-2.0) with its matching LoRA, on an RTX 4070 with 12 GB. Same two passes, 4 steps and "
+        "guidance 1.0 through diffusers, with bfloat16 and model CPU offload. Peak GPU memory was 10.4 GB. Color prompt: "
+        "<i>clear blue sky, warm natural sunlight, same colors and materials as the original</i>.",
+        "The color prompt brought back the blue sky and warmer walls without hurting structure much "
+        "(villa 0.29 to 0.31, block 0.52 to 0.48, room 0.48 to 0.49). It's a cheap fix, and this is the version I would "
+        "build on, but only for exteriors.",
+        ["<b>Materials:</b> steel turns to stone because nothing protects it. Every pixel is generated again.",
+         "<b>Added objects:</b> the tree and wire on the concrete block are already there in the overcast pass. That pass is a "
+         "plain edit with no LoRA, so the extra content starts before the sun is even moved.",
+         "<b>Speed:</b> 73 to 116 s. The model doesn't fully fit in 12 GB, so parts move between RAM and GPU. Time on a "
+         "bigger GPU is still unknown."])
 
     story += pairs(3, "Qwen 3D Lighting (free demo)", "you choose the light direction with an angle, and the model edits the photo.",
                    [(q, VILLA, "left", "Sun moved to the left", "Soft haze on the left, and the photo got zoomed."),
                     (q, BLOCK, "right", "Sun moved to the right", "The right wall got brighter, but the old shadow stayed and flower pots appeared."),
                     (q, ROOM, "back_left", "Low sun from the back left", "Furniture stayed, but the sun patch on the window wall can't happen.")])
-    story += ending_of("Fast and keeps the colors, but the light doesn't really move.",
-                       ["It zooms the photo by 16 to 19 percent every time.", "Old shadows stay, and it adds objects."])
+    story += ending_of(
+        "Qwen-Image-Edit on a free ZeroGPU Space. The Space turns the angle into a prompt such as "
+        "<i>Light source from the Right</i>. 4 steps, guidance 1.0, output about 1024 wide.",
+        "The fastest tool at 6.5 to 24 s, and it keeps colors best. Light change was 0.38 to 0.50 EV, but it's mostly brightness "
+        "added on top of the old lighting. After undoing the zoom, structure was 0.43 to 0.60.",
+        ["<b>Zoom:</b> scale came back 0.81 to 0.84 on all four tries, so the output doesn't line up with the original. "
+         "Using the Space's own image size gave the same result, so it isn't caused by my settings.",
+         "<b>Light is added, not moved:</b> old shadows stay. Direction is only a few words in a prompt, and the model doesn't "
+         "use any depth or geometry. That's probably why it put a sun patch on the window wall.",
+         "<b>Added objects:</b> flower pots appeared on the concrete block balcony."])
 
     story += pairs(4, "FLUX.1 Kontext (free demo)",
                    "this is a normal text edit model. I asked in plain text: change only the lighting and keep the building the same.",
                    [(k, VILLA, "left", "Sun moved to the left", "Almost nothing changed. Colors are a bit stronger."),
                     (k, BLOCK, "right", "Sun moved to the right", "The diagonal shadow did not move, and the frame shifted a little."),
                     (k, ROOM, "back_left", "Low sun from the back left", "Nice sunset, but everything is orange and the view is new.")])
-    story += ending_of("It keeps the building, but it doesn't move the sun on exteriors.",
-                       ["Inside, the sun appeared on the wrong side.", "The open version is non-commercial."])
+    story += ending_of(
+        "FLUX.1 Kontext [dev] on a free ZeroGPU Space. 28 steps, guidance 2.5, seed 42. It only takes text, so there's "
+        "no real way to give it a direction.",
+        "The best structure on exteriors (villa 0.95, block 0.81), but the weakest light change of the three models on those "
+        "photos (0.24 and 0.31 EV). In this case a high score mostly means that little happened.",
+        ["<b>No sun movement:</b> my guess is that <i>keep everything the same</i> beat <i>move the sun</i> in the prompt.",
+         "<b>Interior:</b> a strong sunset, about 0.8 EV darker overall, but the sun landed on the wrong side and the outside view was replaced.",
+         "<b>Frame shift:</b> the concrete block moved by about 38 px (scale 0.98).",
+         "<b>License:</b> the dev weights are non-commercial, so a product would need the paid Pro API, which I did not test."])
 
     t9, ts, tq, tk = "transfer_sun_direction", "transfer_sharp_sun_direction", "transfer_qwen_3d", "transfer_kontext"
     rows = [(VILLA, "left", "Villa", "Slight glow at the edges, and the sun didn't move.", "Stronger glow along the edges.",
@@ -236,8 +280,16 @@ def models():
               text("<b>What I did:</b> the models kept redrawing things, so I kept the original photo and copied only the "
                    "brightness change from each model's result."),
               grid(items, columns=3, max_height=38 * mm)]
-    story += ending_of("Objects stay perfect, but the sun doesn't really move.",
-                       ["Old hard shadows stay.", "Sharper settings add bright halos around objects."])
+    story += ending_of(
+        "Align the result to the original, take the log2 brightness ratio, smooth it with a guided filter that uses the original as "
+        "its guide, clip to 2 EV, scale it up and multiply in linear light. Smooth: radius 12, epsilon 0.002. "
+        "Sharp: radius 3, epsilon 0.05. It runs on a CPU and keeps the full resolution.",
+        "Objects are safe: structure 0.94 to 1.00, with no redrawn furniture. But light change falls to 0.04 to 0.20 EV, against "
+        "0.24 to 0.61 for the models, so most of the new light is lost on the way.",
+        ["<b>Old shadows stay:</b> erasing a hard shadow needs a sharp ratio exactly on the shadow edge. Smoothing blurs it, "
+         "and the model's result doesn't line up well enough for a sharp ratio.",
+         "<b>Halos:</b> with less smoothing, edges that don't match between the two images show up as bright lines.",
+         "<b>Ghosts:</b> mistakes in the model's result come along too, like the ring shadow on the living room floor."])
     return story
 
 
@@ -264,12 +316,17 @@ def villa_angles():
             (r(s4, v, "sunset_left"), "Sunset on the left", "The biggest change of all."),
             (r(s4, v, "sunset_right"), "Sunset on the right", "A miss: I asked for the right, but the orange sky stayed on the left."),
             (r("qwen_3d", v, "sun_front"), "Qwen, sun behind the camera", "My one extra Qwen try. Colors are nice, but it's zoomed in a lot."),
-        ], max_height=60 * mm),
-        text("Result", H2),
-        text("This is the best result of the project. You can tell where the sun is, especially from behind the building, from above and at sunset."),
-        text("Problems", H2),
-        *bullets(["The steel sculpture looks like stone, and the pool loses its strong turquoise.",
-                  "Wall tile lines get softer.", "Sunset direction isn't reliable yet."]),
+        ], max_height=48 * mm),
+        *ending_of(
+            "Same 4B setup. I raised the ball brightness from 1.5 to 3.0, set sun height from 8 to 85 degrees, and added "
+            "<i>strong direct sunlight, hard sharp shadows</i> to the prompt. The sunset shots used their own prompt.",
+            "This is the best result of the project. You can tell where the sun is, especially from behind the building, "
+            "from above and at sunset. Light change was 0.22 to 0.47 EV in daylight and 0.69 to 0.80 EV at sunset.",
+            ["<b>Materials:</b> the sculpture looks like stone, the pool loses its turquoise and tile lines get softer. "
+             "Structure dropped to 0.19 to 0.38 here, so stronger light costs more detail.",
+             "<b>Left and right:</b> this is the closest pair. The camera sees two faces of the villa at an angle, so the difference is small.",
+             "<b>Sunset direction:</b> the right side sunset stayed orange on the left. My guess is that the word <i>sunset</i> "
+             "pulled the result toward one look, and the ball lost that fight."]),
     ]
 
 
@@ -326,16 +383,65 @@ def furniture():
     return story
 
 
+def score_table():
+    with open("results/_report/scores.csv", encoding="utf-8", newline="") as f:
+        scores = {(row["tool"], row["photo"], row["trial"]): row for row in csv.DictReader(f, delimiter=";")}
+
+    def cell(tool, photo, trial):
+        row = scores[(tool, photo, trial)]
+        return f"{float(row['structure']):.2f} / {float(row['light_ev']):.2f} / {float(row['scale']):.2f}"
+
+    def small(rows, widths):
+        t = Table([[text(str(c), LABEL if i == 0 else NOTE) for c in row] for i, row in enumerate(rows)],
+                  colWidths=[w * PAGE_WIDTH for w in widths])
+        t.setStyle(TableStyle([("LINEBELOW", (0, 0), (-1, -1), 0.3, GRAY), ("TOPPADDING", (0, 0), (-1, -1), 1.5),
+                               ("BOTTOMPADDING", (0, 0), (-1, -1), 2), ("LEFTPADDING", (0, 0), (-1, -1), 2)]))
+        return t
+
+    tools = [("Sun 9B", "sun_direction", ""), ("Sun 4B, no prompt", "sun_4b_local", ""),
+             ("Sun 4B, color prompt", "sun_4b_local", "_color"), ("Qwen 3D Lighting", "qwen_3d", ""),
+             ("FLUX.1 Kontext", "kontext", ""), ("Transfer from Sun 9B, smooth", "transfer_sun_direction", ""),
+             ("Transfer from Sun 9B, sharp", "transfer_sharp_sun_direction", ""),
+             ("Transfer from Qwen", "transfer_qwen_3d", ""), ("Transfer from Kontext", "transfer_kontext", "")]
+    rows = [["Tool", "Villa", "Concrete block", "Living room"]]
+    rows += [[name, cell(tool, VILLA, "left" + end), cell(tool, BLOCK, "right" + end), cell(tool, ROOM, "back_left" + end)]
+             for name, tool, end in tools]
+    angles = [("Behind the camera", "sun_front"), ("Behind the building", "sun_back"), ("Straight above", "sun_top"),
+              ("Higher left", "sun_left"), ("Higher right", "sun_right"), ("Low left", "sun_left_low"),
+              ("Low right", "sun_right_low"), ("Sunset left", "sunset_left"), ("Sunset right", "sunset_right")]
+    angle_rows = [["Sun position", "Villa, Sun 4B"]] + [[name, cell("sun_4b_local", VILLA, trial)] for name, trial in angles]
+    return [PageBreak(), text("All the numbers", H1),
+            text("Each cell shows structure / light change in EV / scale. One seed per try, so treat these as a rough guide. "
+                 "They're also in results/_report/scores.csv on GitHub."),
+            small(rows, [0.37, 0.21, 0.21, 0.21]), text("Villa sun positions", H2), small(angle_rows, [0.37, 0.25]),
+            text("Time per image", H2),
+            *bullets(["Sun 9B on a free Space: 20.5 to 26 s, queue included", "Sun 4B on my RTX 4070: 73 to 116 s",
+                      "Qwen on a free Space: 6.5 to 24 s, queue included", "Kontext on a free Space: 31.5 to 45 s, queue included"])]
+
+
 def ending():
     return [
         PageBreak(),
+        text("How I would build it", H1),
+        *bullets([
+            "<b>Model:</b> Sun-Direction 4B with a color prompt, because its base model and LoRA are both Apache-2.0.",
+            "<b>Hosting:</b> a serverless GPU that only runs when someone uses it. An always-on RTX 4090 costs about $650 a month, "
+            "which only beats a $0.04 API above about 16,000 images a month.",
+            "<b>Cost:</b> RunPod serverless RTX 4090 is $1.34 an hour. At about 25 s per image that's about $0.01, or $0.02 with one retry.",
+            "<b>Quality gate:</b> after generating, compare the result with the original and retry or reject it if the structure "
+            "drops too far. I haven't tuned that threshold yet.",
+            "<b>Risks:</b> I didn't test 4B on that GPU or measure cold starts, so the speed and cost above are estimates from 9B Space times.",
+        ]),
         text("Problems along the way", H1),
         *bullets([
             "Some free Hugging Face demos were paused or crashing, so I found others.",
             "The free GPU quota ran out quickly, so I moved the Sun-Direction tests to my own computer.",
             "The bigger 9B model doesn't fit on my 12 GB card, so I used 4B.",
-            "My first score was misleading. Kontext scored best because it barely changed anything, so I checked by eye too.",
+            "My saved Hugging Face token was invalid, so runs kept failing after I logged in. Logging in again through the browser fixed it.",
+            "My first score was misleading. It fell near zero when a model zoomed, so I added alignment. Kontext still scored best "
+            "because it barely changed anything, so I also check by eye.",
             "I thought the gray colors came from the overcast step. They came from the next step, so a color prompt helped.",
+            "Sun-Direction needed 150 s of quota when I had 147 s left. That's what pushed me to run it locally.",
         ]),
         text("What can be improved", H1),
         *bullets([
@@ -371,7 +477,7 @@ def page_number(canvas, doc):
 
 
 def main():
-    story = start() + models() + villa_angles() + failures() + furniture() + ending()
+    story = start() + models() + villa_angles() + failures() + furniture() + score_table() + ending()
     doc = SimpleDocTemplate(OUTPUT, pagesize=A4, leftMargin=14 * mm, rightMargin=14 * mm, topMargin=12 * mm,
                             bottomMargin=13 * mm, title="Moving the sun in architecture photos", author="Mehmet Ozturk")
     doc.build(story, onFirstPage=page_number, onLaterPages=page_number)
